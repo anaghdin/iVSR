@@ -15,8 +15,8 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #ifndef _WIN32
@@ -25,6 +25,14 @@
 #endif
 
 #include "ivsr.h"
+
+#ifndef ENABLE_LOG
+#    define ENABLE_LOG 0
+#endif
+
+#ifndef ENABLE_TIMING
+#    define ENABLE_TIMING 0
+#endif
 
 /**
  * @enum IBASICVSRStatus
@@ -65,8 +73,7 @@ inline void ivsr_status_log(IVSRStatus status, const char* log) {
         {IVSRStatus::UNSUPPORTED_CONFIG, "[Error] Unsupported configs"},
         {IVSRStatus::UNKNOWN_ERROR, "[Unknown Error] Process failed"},
         {IVSRStatus::EXCEPTION_ERROR, "[Exception] Exception occurred"},
-        {IVSRStatus::UNSUPPORTED_SHAPE, "[Error] Unsupported input shape"}
-    };
+        {IVSRStatus::UNSUPPORTED_SHAPE, "[Error] Unsupported input shape"}};
 
     auto it = status_messages.find(status);
     if (it != status_messages.end()) {

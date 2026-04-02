@@ -12,6 +12,7 @@
 #define OV_ENGINE_HPP
 
 #include <condition_variable>
+#include <cstdint>
 #include <queue>
 
 #include "engine.hpp"
@@ -21,6 +22,32 @@
 #include "openvino/pass/manager.hpp"
 
 typedef std::function<void(size_t id)> CallbackFunction;
+
+#ifndef ENABLE_TIMING
+#    define ENABLE_TIMING 0
+#endif
+
+#if ENABLE_TIMING
+typedef struct OVEngineTimingStats {
+    uint64_t calls;
+    uint64_t total_us;
+    uint64_t idle_wait_us;
+    uint64_t bind_us;
+    uint64_t start_async_us;
+    uint64_t exec_wait_us;
+    uint64_t exec_ov_real_us;
+    uint64_t exec_ov_cpu_us;
+    uint64_t exec_profiled_calls;
+    uint64_t callback_internal_us;
+    uint64_t callback_user_us;
+    uint64_t callback_user_dispatch_us;
+    uint64_t callback_user_fn_us;
+} OVEngineTimingStats;
+
+void ov_engine_timing_reset();
+void ov_engine_timing_snapshot(OVEngineTimingStats* stats);
+#endif
+
 class inferReqWrap final {
 public:
     using Ptr = std::shared_ptr<inferReqWrap>;
@@ -78,12 +105,73 @@ public:
         callback_(id_);
     }
 
+#if ENABLE_TIMING
+    void collect_profiling_stats() {
+        last_ov_real_us_ = 0;
+        last_ov_cpu_us_ = 0;
+        has_profile_ = false;
+        try {
+            auto infos = request_.get_profiling_info();
+            uint64_t real_us = 0;
+            uint64_t cpu_us = 0;
+            for (const auto& info : infos) {
+                real_us += (uint64_t)std::chrono::duration_cast<std::chrono::microseconds>(info.real_time).count();
+                cpu_us += (uint64_t)std::chrono::duration_cast<std::chrono::microseconds>(info.cpu_time).count();
+            }
+            if (!infos.empty()) {
+                has_profile_ = true;
+                last_ov_real_us_ = real_us;
+                last_ov_cpu_us_ = cpu_us;
+            }
+        } catch (...) {
+            has_profile_ = false;
+        }
+    }
+
+    bool has_profile() const {
+        return has_profile_;
+    }
+    uint64_t ov_real_us() const {
+        return last_ov_real_us_;
+    }
+    uint64_t ov_cpu_us() const {
+        return last_ov_cpu_us_;
+    }
+
+    void set_host_enqueue_start_us(int64_t t) {
+        host_enqueue_start_us_ = t;
+    }
+    void set_host_idle_end_us(int64_t t) {
+        host_idle_end_us_ = t;
+    }
+    void set_host_submit_end_us(int64_t t) {
+        host_submit_end_us_ = t;
+    }
+    int64_t host_enqueue_start_us() const {
+        return host_enqueue_start_us_;
+    }
+    int64_t host_idle_end_us() const {
+        return host_idle_end_us_;
+    }
+    int64_t host_submit_end_us() const {
+        return host_submit_end_us_;
+    }
+#endif
+
 private:
     ov::InferRequest request_;
     size_t id_;
     Time::time_point startTime_;
     Time::time_point endTime_;
     CallbackFunction callback_;
+#if ENABLE_TIMING
+    int64_t host_enqueue_start_us_ = 0;
+    int64_t host_idle_end_us_ = 0;
+    int64_t host_submit_end_us_ = 0;
+    bool has_profile_ = false;
+    uint64_t last_ov_real_us_ = 0;
+    uint64_t last_ov_cpu_us_ = 0;
+#endif
 };
 
 class ov_engine : public engine<ov_engine> {
@@ -117,13 +205,13 @@ public:
         static_assert(std::is_same<T, ov::Shape>::value || std::is_same<T, size_t>::value ||
                           std::is_same<T, tensor_desc_t>::value,
                       "get_attr() is only supported for 'ov::Shape' and 'size_t' types");
-/*
-        auto extend_shape = [](ov::Shape& shape, size_t dims) {
-            if (shape.size() < dims)
-                for (size_t i = shape.size(); i < dims; i++)
-                    shape.insert(shape.begin(), 1);
-        };
-*/
+        /*
+                auto extend_shape = [](ov::Shape& shape, size_t dims) {
+                    if (shape.size() < dims)
+                        for (size_t i = shape.size(); i < dims; i++)
+                            shape.insert(shape.begin(), 1);
+                };
+        */
 
         if constexpr (std::is_same<T, tensor_desc_t>::value) {
             ov::Shape shape;

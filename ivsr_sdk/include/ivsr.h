@@ -117,6 +117,28 @@ typedef struct tensor_desc {
     size_t shape[8];             //!< An array of size_t values representing the shape of the tensor. The maximum number of dimensions is 8.
 } tensor_desc_t;
 
+#ifndef ENABLE_TIMING
+#define ENABLE_TIMING 0
+#endif
+
+#if ENABLE_TIMING
+typedef struct ivsr_timing_stats {
+    uint64_t calls;
+    uint64_t total_us;
+    uint64_t idle_wait_us;
+    uint64_t bind_us;
+    uint64_t start_async_us;
+    uint64_t exec_wait_us;
+    uint64_t exec_ov_real_us;
+    uint64_t exec_ov_cpu_us;
+    uint64_t exec_profiled_calls;
+    uint64_t callback_internal_us;
+    uint64_t callback_user_us;
+    uint64_t callback_user_dispatch_us;
+    uint64_t callback_user_fn_us;
+} ivsr_timing_stats_t;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -181,6 +203,10 @@ IVSRStatus ivsr_reconfig(ivsr_handle handle, ivsr_config_t* configs);
  * @return IVSRStatus indicating the success or failure of the operation.
  */
 IVSRStatus ivsr_get_attr(ivsr_handle handle, IVSRAttrKey key, void* value);
+
+#if ENABLE_TIMING
+IVSRStatus ivsr_get_timing_stats(ivsr_handle handle, ivsr_timing_stats_t *stats);
+#endif
 
 /**
  * @brief Deinitializes the IVSR system and releases associated resources.

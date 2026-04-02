@@ -1,0 +1,99 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch ffmpegCBR",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_ffmpeg_plugin/ffmpeg/ffmpeg_g",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "args": [
+                // "-benchmark",
+                // "-progress", "pipe:1", "-stats_period", "0.0167",
+                //   "-loglevel", "debug",
+                // "-loglevel", "32",
+                //"-stream_loop",
+                //"-1",
+                "-y",
+                "-i",
+                "/home/sdp/videos/SVP/Chimera-ToddlerFountain_3840x2160_2997fps_10bit_420.4k_1920x1080_8bit_QP0.y4m",
+                "-vf",
+                //                "format=yuv420p,dnn_processing=dnn_backend=ivsr:model=/home/sdp/Amir/SVP/code/iVSR_debug/SVP-Basic-y-fp16.xml:input=input:output=output:nif=1:nireq=2:backend_configs=model_type=1,scale=in_range=pc:out_range=pc,setrange=tv,scale=1080:1920:flags=lanczos+accurate_rnd+full_chroma_int:sws_dither=none:param0=5",
+                "format=yuv420p,dnn_processing=dnn_backend=ivsr:model=/home/sdp/Amir/SVP/code/iVSR_debug/SVP-Basic-y-fp16.xml:input=input:output=output:nif=1:nireq=2:backend_configs=model_type=1,scale=in_range=pc:out_range=pc,setrange=tv",
+                //"format=yuv420p,dnn_processing=dnn_backend=ivsr:model=/home/sdp/Amir/SVP/code/iVSR_debug/SVP-Basic-y-fp16_identity.xml:input=input:output=output:nif=1:nireq=2:backend_configs=model_type=1,scale=in_range=pc:out_range=pc,setrange=tv",
+                //"-frames:v",
+                //"1000",
+                "-pix_fmt",
+                "yuv420p",
+                "-f",
+                "null",
+                "-",
+                //"-c:v",
+                //"libsvtav1",
+                //"-pix_fmt",
+                //"yuv420p",
+                //"-g",
+                //"150",
+                //"-preset",
+                //"8",
+                //"-crf",
+                //"40",
+                //"-f",
+                //"ivf",
+                //"-svtav1-params",
+                //"hierarchical-levels=5:enable-dg=0:tile-columns=0:tile-rows=0:lp=4:fast-decode=2:enable-force-key-frames=0:use-fixed-qindex-offsets=2:key-frame-chroma-qindex-offset=24:chroma-qindex-offsets=[24,24,24,24,24,24]",
+                //"-color_range",
+                //"tv",
+                //"-an",
+                //"-dn",
+                //"-map_metadata",
+                //"-1",
+                //"/home/sdp/Amir/SVP/code/iVSR_debug/ffmpeg_outputREF.bin",
+            ],
+            //"-stats", 
+            // "2>&1", "|" ,"tee", "/home/Amir/ffmpeg_plugin/ffmpeg_plugin/log.txt"],
+            //   ">/home/Amir/ffmpeg_plugin/ffmpeg_plugin/log.txt", "2>&1"],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [
+                {
+                    "name": "LD_LIBRARY_PATH",
+                    "value": "/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_ffmpeg_plugin/ffmpeg/libavfilter:/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_ffmpeg_plugin/ffmpeg/libavcodec:/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_ffmpeg_plugin/ffmpeg/libavformat:/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_ffmpeg_plugin/ffmpeg/libavutil:/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_ffmpeg_plugin/ffmpeg/libswscale:/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_ffmpeg_plugin/ffmpeg/libswresample:/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_sdk/lib"
+                    //"value": "/home/sdp/Amir/SVP/code/iVSR_debug/ivsr_sdk/lib"
+                    //"value": "/usr/local/lib:/home/Amir/vsi-vappi-driver/umd-hyb-264/build"
+                },
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                /*{
+                    "description": "Pin process to CPU 0",
+                    "text": "set exec-wrapper taskset -c 0",
+                    "ignoreFailures": true
+                },*/
+                {
+                    "description": "Set NUMA binding",
+                    "text": "set exec-wrapper numactl --cpunodebind=0 --membind=0 --physcpubind=0", //"ignoreFailures": true
+                    //"text": "set exec-wrapper numactl --cpunodebind=0 --membind=0 --physcpubind=28-35,124-131", //"ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "symbolLoadInfo": {
+                "loadAll": true
+            }
+        },
+    ]
+}
